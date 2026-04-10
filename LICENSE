@@ -1,0 +1,42 @@
+opsh Source-Available License
+
+Copyright (c) 2026 rwov
+
+Permission is granted, free of charge, to any person obtaining a copy of this
+software and associated documentation files (the "Software") to:
+
+1. Read, view, and study the source code.
+2. Use the Software for personal, educational, evaluation, research, and other
+   non-commercial purposes.
+3. Modify the Software for personal, educational, evaluation, research, and
+   other non-commercial purposes.
+4. Submit issues, pull requests, patches, and other contributions to the
+   Software.
+
+The above permissions are subject to the following conditions:
+
+1. This license text and all copyright notices must be included in all copies
+   or substantial portions of the Software.
+2. Any redistribution of modified versions of the Software must clearly state
+   that changes were made.
+3. You may not use, copy, clone, reproduce, distribute, sublicense, sell,
+   offer as a service, host for third parties, or otherwise exploit the
+   Software or any substantially similar version of it for commercial or
+   for-profit purposes without prior written permission from the copyright
+   holder.
+4. You may not create a competing product or service based on the Software for
+   commercial or for-profit use without prior written permission from the
+   copyright holder.
+
+For clarity, "commercial or for-profit purposes" includes any use primarily
+intended for commercial advantage, monetary compensation, revenue generation,
+paid client work, internal business operations for a for-profit entity, or sale
+of a product or service.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
