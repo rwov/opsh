@@ -152,7 +152,7 @@ export const Feature = ({
                 command={currentItem.terminal.command}
                 output={currentItem.terminal.output}
                 opsh={currentItem.terminal.opsh}
-                className="h-full w-[60%] max-w-none shadow-2xl shadow-primary/10"
+                className="h-full lg:w-[60%] max-w-none shadow-2xl shadow-primary/10"
                 bodyClassName="h-full min-h-[280px] text-sm md:text-base"
               />
             </div>

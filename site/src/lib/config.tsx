@@ -37,10 +37,10 @@ export const siteConfig = {
   ],
   links: {
     email: "support@insightfull.app",
-    twitter: "https://twitter.com/codeforgeai",
-    discord: "https://discord.gg/codeforgeai",
-    github: "https://github.com/codeforgeai",
-    instagram: "https://instagram.com/codeforgeai",
+    twitter: "https://twitter.com/",
+    discord: "https://discord.gg/",
+    github: "https://github.com/rwov/opsh",
+    instagram: "https://instagram.com/",
   },
   nav: {
     links: [
@@ -849,7 +849,7 @@ export const siteConfig = {
       links: [
         { id: 1, title: "Home", url: "/" },
         { id: 2, title: "Install", url: "/install" },
-        { id: 3, title: "GitHub", url: "https://github.com/codeforgeai" },
+        { id: 3, title: "GitHub", url: "https://github.com/rwov/opsh" },
       ],
     },
     {
