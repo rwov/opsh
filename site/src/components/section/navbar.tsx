@@ -25,6 +25,24 @@ import {
 } from "@/components/ui/accordion";
 import { Icons } from "../icons";
 
+type NavSubmenuItem = {
+  id: number;
+  icon: React.ReactNode;
+  name: string;
+  href: string;
+  description: string;
+  image?: string;
+};
+
+type NavLinkItem = {
+  id: number;
+  name: string;
+  href: string;
+  submenu?: NavSubmenuItem[];
+};
+
+const navLinks = siteConfig.nav.links as NavLinkItem[];
+
 function HamburgerButton({
   isOpen,
   onClick,
@@ -60,7 +78,7 @@ function DesktopNav() {
   return (
     <NavigationMenu className="hidden md:flex">
       <NavigationMenuList className="gap-1">
-        {siteConfig.nav.links.map((link) => (
+        {navLinks.map((link) => (
           <NavigationMenuItem key={link.id}>
             {link.submenu ? (
               <>
@@ -167,7 +185,7 @@ function MobileNav({
             <div className="flex h-full flex-col">
               <nav className="flex-1 px-6 py-8 pb-32">
                 <div className="grid grid-cols-1 gap-4">
-                  {siteConfig.nav.links.map((link, index) => (
+                  {navLinks.map((link, index) => (
                     <motion.div
                       key={link.id}
                       initial={{
