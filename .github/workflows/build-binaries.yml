@@ -17,10 +17,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: darwin-x64
+          - target: macos-x64
             runner: macos-15-intel
-            archive_name: opsh-darwin-x64.tar.gz
+            archive_name: opsh-macos-x64.tar.gz
             bundle_dir: build/bin/darwin-x64
+          - target: macos-arm64
+            runner: macos-15
+            archive_name: opsh-macos-arm64.tar.gz
+            bundle_dir: build/bin/darwin-arm64
           - target: linux-x64
             runner: ubuntu-24.04
             archive_name: opsh-linux-x64.tar.gz

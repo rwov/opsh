@@ -44,15 +44,60 @@ download_file() {
 }
 
 fetch_latest_release_json() {
-  curl -fsSL \
-    -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/$RELEASE_REPO/releases/latest"
+  latest_url="https://api.github.com/repos/$RELEASE_REPO/releases/latest"
+  releases_url="https://api.github.com/repos/$RELEASE_REPO/releases"
+
+  if release_json="$(curl -fsSL -H "Accept: application/vnd.github+json" "$latest_url" 2>/dev/null)"; then
+    printf '%s\n' "$release_json"
+    return 0
+  fi
+
+  releases_json="$(curl -fsSL -H "Accept: application/vnd.github+json" "$releases_url")"
+  first_release_json="$(
+    printf '%s\n' "$releases_json" | awk '
+      BEGIN { depth = 0; found = 0; started = 0; out = "" }
+      /^\[/ { next }
+      {
+        line = $0
+        open_count = gsub(/\{/, "{", line)
+        close_count = gsub(/\}/, "}", line)
+
+        if (started == 0 && index($0, "{") > 0) {
+          started = 1
+        }
+
+        if (started == 1) {
+          out = out $0 "\n"
+          depth += open_count
+          depth -= close_count
+          if (depth == 0) {
+            print out
+            exit
+          }
+        }
+      }
+    '
+  )"
+
+  if [ -z "$first_release_json" ]; then
+    printf 'Could not find any published GitHub releases in %s\n' "$RELEASE_REPO" >&2
+    exit 1
+  fi
+
+  printf '%s\n' "$first_release_json"
 }
 
 resolve_asset_url() {
   release_json="$1"
   platform="$2"
   arch="$3"
+  asset_platform_primary="$platform"
+  asset_platform_secondary=""
+
+  if [ "$platform" = "darwin" ]; then
+    asset_platform_primary="macos"
+    asset_platform_secondary="darwin"
+  fi
 
   asset_urls="$(
     printf '%s\n' "$release_json" |
@@ -63,13 +108,13 @@ resolve_asset_url() {
     return 1
   fi
 
-  printf '%s\n' "$asset_urls" | awk -v platform="$platform" -v arch="$arch" '
+  printf '%s\n' "$asset_urls" | awk -v platform1="$asset_platform_primary" -v platform2="$asset_platform_secondary" -v arch="$arch" '
     index($0, "checksums") == 0 &&
     index($0, "sha256") == 0 &&
     index($0, "/opsh-") > 0 &&
-    index($0, platform) > 0 &&
+    (index($0, platform1) > 0 || (platform2 != "" && index($0, platform2) > 0)) &&
     (index($0, arch) > 0 || (arch == "x64" && index($0, "amd64") > 0)) &&
-    ($0 ~ /\.tar\.gz$/ || $0 ~ /\.tgz$/ || $0 ~ /\.zip$/ || $0 ~ /\/opsh(-|$)/ || $0 ~ /\/opsh-[^/]+$/) {
+    ($0 ~ /\.tar\.gz$/ || $0 ~ /\.tgz$/ || $0 ~ /\.zip$/ || substr($0, length($0) - 4) == "/opsh") {
       print
       exit
     }
@@ -162,6 +207,7 @@ ASSET_URL="$(resolve_asset_url "$RELEASE_JSON" "$PLATFORM" "$ARCH")"
 
 if [ -z "$ASSET_URL" ]; then
   printf 'Could not find a release asset for %s-%s in %s\n' "$PLATFORM" "$ARCH" "$RELEASE_REPO" >&2
+  printf 'Expected an asset name like opsh-macos-arm64.tar.gz or opsh-linux-x64.tar.gz\n' >&2
   exit 1
 fi
 

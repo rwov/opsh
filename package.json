@@ -1,6 +1,6 @@
 {
   "name": "opsh",
-  "version": "0.1.0",
+  "version": "0.1.2-alpha",
   "description": "A natural-language shell adapter for macOS and Linux.",
   "type": "module",
   "private": true,
