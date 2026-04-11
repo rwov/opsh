@@ -67,7 +67,70 @@ jobs:
 
           echo "released=true" >>"$GITHUB_OUTPUT"
 
-  build:
+  build-from-push-release:
+    name: Build ${{ matrix.target }} for created release
+    needs: create-release
+    if: github.event_name == 'push' && needs.create-release.outputs.released == 'true'
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: macos-x64
+            runner: macos-15-intel
+            archive_name: opsh-macos-x64.tar.gz
+            bundle_dir: build/bin/darwin-x64
+          - target: macos-arm64
+            runner: macos-15
+            archive_name: opsh-macos-arm64.tar.gz
+            bundle_dir: build/bin/darwin-arm64
+          - target: linux-x64
+            runner: ubuntu-24.04
+            archive_name: opsh-linux-x64.tar.gz
+            bundle_dir: build/bin/linux-x64
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
+            archive_name: opsh-linux-arm64.tar.gz
+            bundle_dir: build/bin/linux-arm64
+
+    steps:
+      - name: Check out repository at release tag
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ needs.create-release.outputs.tag }}
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build binary bundle
+        run: bun run build:binary
+
+      - name: Package bundle
+        run: tar -czf "${{ matrix.archive_name }}" -C "${{ matrix.bundle_dir }}" .
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: push-${{ matrix.target }}
+          path: ${{ matrix.archive_name }}
+          if-no-files-found: error
+
+      - name: Upload release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" "${{ matrix.archive_name }}" --clobber
+
+  build-from-release:
     if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.runner }}
