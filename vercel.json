@@ -2,44 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
-      "source": "/_mintlify/:path*",
-      "destination": "https://opsh.mintlify.app/_mintlify/:path*"
-    },
-    {
-      "source": "/api/request",
-      "destination": "https://opsh.mintlify.app/_mintlify/api/request"
-    },
-    {
       "source": "/docs",
-      "destination": "https://opsh.mintlify.app/docs"
+      "destination": "https://opsh.mintlify.dev/docs"
     },
     {
-      "source": "/docs/llms.txt",
-      "destination": "https://opsh.mintlify.app/llms.txt"
-    },
-    {
-      "source": "/docs/llms-full.txt",
-      "destination": "https://opsh.mintlify.app/llms-full.txt"
-    },
-    {
-      "source": "/docs/sitemap.xml",
-      "destination": "https://opsh.mintlify.app/sitemap.xml"
-    },
-    {
-      "source": "/docs/robots.txt",
-      "destination": "https://opsh.mintlify.app/robots.txt"
-    },
-    {
-      "source": "/docs/mcp",
-      "destination": "https://opsh.mintlify.app/mcp"
-    },
-    {
-      "source": "/docs/:path*",
-      "destination": "https://opsh.mintlify.app/docs/:path*"
-    },
-    {
-      "source": "/mintlify-assets/:path+",
-      "destination": "https://opsh.mintlify.app/mintlify-assets/:path+"
+      "source": "/docs/:match*",
+      "destination": "https://opsh.mintlify.dev/docs/:match*"
     }
   ]
 }
