@@ -147,7 +147,7 @@ export class PersistentShellSession {
 }
 
 function buildCommandWrapper(cwd: string, command: string, endToken: string): string {
-  return `builtin cd -- ${quoteForSingleShellWord(cwd)} || exit 1\n${command}\n__opsh_status=$?\nprintf '\\n${endToken}:%s:%s\\n' "$__opsh_status" "$PWD"\n`;
+  return `builtin cd -- ${quoteForSingleShellWord(cwd)} || exit 1\n${command}\n__opsh_status=$?\nprintf '${endToken}:%s:%s\\n' "$__opsh_status" "$PWD"\n`;
 }
 
 function getExecutionArgs(shellName: DetectedShell["name"], wrappedCommand: string): string[] {

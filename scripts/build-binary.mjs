@@ -1,5 +1,5 @@
 import { build } from "esbuild";
-import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -83,6 +83,8 @@ execFileSync(process.execPath, postjectArgs, {
   stdio: "inherit",
 });
 
+stripBinaryIfPossible(binaryPath);
+
 if (process.platform === "darwin") {
   execFileSync("codesign", ["--sign", "-", binaryPath], { stdio: "inherit" });
 }
@@ -91,9 +93,7 @@ if (!existsSync(nodePtyDir)) {
   throw new Error("node-pty is not installed. Run `bun install` first.");
 }
 
-cpSync(nodePtyDir, join(outDir, "node_modules", "node-pty"), {
-  recursive: true,
-});
+copyNodePtyRuntime(nodePtyDir, join(outDir, "node_modules", "node-pty"));
 
 writeFileSync(
   join(outDir, "README.txt"),
@@ -140,5 +140,73 @@ function isUniversalMachO(binaryPath) {
     return output.includes("universal binary");
   } catch {
     return false;
+  }
+}
+
+function copyNodePtyRuntime(sourceDir, destinationDir) {
+  rmSync(destinationDir, { recursive: true, force: true });
+  mkdirSync(destinationDir, { recursive: true });
+
+  const packageJson = JSON.parse(readFileSync(join(sourceDir, "package.json"), "utf8"));
+  const runtimePackageJson = {
+    name: packageJson.name,
+    version: packageJson.version,
+    main: packageJson.main,
+    types: packageJson.types,
+    license: packageJson.license,
+  };
+
+  writeFileSync(join(destinationDir, "package.json"), JSON.stringify(runtimePackageJson, null, 2));
+
+  const runtimeLibFiles = [
+    "index.js",
+    "terminal.js",
+    "eventEmitter2.js",
+    "interfaces.js",
+    "types.js",
+    "utils.js",
+    process.platform === "win32" ? "windowsTerminal.js" : "unixTerminal.js",
+  ];
+
+  mkdirSync(join(destinationDir, "lib"), { recursive: true });
+  for (const file of runtimeLibFiles) {
+    copyFileSync(join(sourceDir, "lib", file), join(destinationDir, "lib", file));
+  }
+
+  if (existsSync(join(sourceDir, "typings", "node-pty.d.ts"))) {
+    mkdirSync(join(destinationDir, "typings"), { recursive: true });
+    copyFileSync(join(sourceDir, "typings", "node-pty.d.ts"), join(destinationDir, "typings", "node-pty.d.ts"));
+  }
+
+  const prebuildDir = join(sourceDir, "prebuilds", `${process.platform}-${process.arch}`);
+  if (existsSync(prebuildDir)) {
+    cpSync(prebuildDir, join(destinationDir, "prebuilds", `${process.platform}-${process.arch}`), {
+      recursive: true,
+    });
+  }
+
+  const buildReleaseDir = join(sourceDir, "build", "Release");
+  if (existsSync(buildReleaseDir)) {
+    cpSync(buildReleaseDir, join(destinationDir, "build", "Release"), {
+      recursive: true,
+    });
+  }
+}
+
+function stripBinaryIfPossible(binaryPath) {
+  const candidates =
+    process.platform === "darwin"
+      ? [["strip", ["-x", binaryPath]]]
+      : process.platform === "linux"
+        ? [["strip", ["--strip-unneeded", binaryPath]]]
+        : [];
+
+  for (const [command, args] of candidates) {
+    try {
+      execFileSync(command, args, { stdio: "ignore" });
+      return;
+    } catch {
+      continue;
+    }
   }
 }

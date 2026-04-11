@@ -2,7 +2,7 @@ import { createInterface } from "node:readline/promises";
 import type { ShellPlan } from "../ai/schema.js";
 import { generateShellPlan } from "../ai/generate.js";
 import { createProvider, type LlmProvider } from "../ai/provider.js";
-import { buildDirectPlan } from "./commands.js";
+import { buildDirectPlan, looksLikeDirectShellCommand } from "./commands.js";
 import type { OpshConfig } from "../config/types.js";
 import type { AvailableCommandRegistry } from "../shell/commands.js";
 import { executePlan } from "../shell/execute.js";
@@ -50,6 +50,17 @@ export async function processPrompt(
   rl: Pick<ReturnType<typeof createInterface>, "question" | "pause" | "resume">,
 ): Promise<{ exitCode: number }> {
   if (runtime.directMode) {
+    return await executeImmediateCommand(input, {
+      ...runtime,
+      warpMode: false,
+    }, rl);
+  }
+
+  if (
+    !runtime.printOnly &&
+    looksLikeDirectShellCommand(input, runtime.availableCommands) &&
+    classifyCommandSafety(input).risk === "safe"
+  ) {
     return await executeImmediateCommand(input, {
       ...runtime,
       warpMode: false,

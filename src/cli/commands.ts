@@ -1,6 +1,7 @@
 import os from "node:os";
 import pc from "picocolors";
 import type { OpshConfig } from "../config/types.js";
+import type { AvailableCommandRegistry } from "../shell/commands.js";
 import type { HistoryStore } from "../shell/history.js";
 
 export type ReplMetaCommand =
@@ -44,6 +45,32 @@ export function buildDirectPlan(input: string) {
     needsConfirmation: true,
     shouldAutoExecute: false,
   };
+}
+
+export function looksLikeDirectShellCommand(
+  input: string,
+  availableCommands: AvailableCommandRegistry,
+): boolean {
+  const trimmed = input.trim();
+  if (!trimmed || trimmed.startsWith("!")) {
+    return false;
+  }
+
+  const firstToken = trimmed.match(/^[^\s|&;<>()[\]{}]+/)?.[0];
+  if (!firstToken) {
+    return false;
+  }
+
+  if (
+    firstToken.startsWith("./") ||
+    firstToken.startsWith("../") ||
+    firstToken.startsWith("/") ||
+    firstToken.startsWith("~/")
+  ) {
+    return true;
+  }
+
+  return availableCommands.has(firstToken);
 }
 
 export function getHelpText(): string {
