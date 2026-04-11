@@ -61,6 +61,11 @@ export function looksLikeDirectShellCommand(
     return false;
   }
 
+  const rest = trimmed.slice(firstToken.length).trimStart();
+  if (rest && looksLikeNaturalLanguageRemainder(rest)) {
+    return false;
+  }
+
   if (
     firstToken.startsWith("./") ||
     firstToken.startsWith("../") ||
@@ -71,6 +76,46 @@ export function looksLikeDirectShellCommand(
   }
 
   return availableCommands.has(firstToken);
+}
+
+function looksLikeNaturalLanguageRemainder(value: string): boolean {
+  const normalized = value.toLowerCase();
+  const naturalLanguageStarters = [
+    "which ",
+    "what ",
+    "where ",
+    "why ",
+    "how ",
+    "who ",
+    "when ",
+    "my ",
+    "the ",
+    "a ",
+    "an ",
+    "this ",
+    "that ",
+    "these ",
+    "those ",
+    "folder ",
+    "file ",
+    "project ",
+  ];
+
+  if (naturalLanguageStarters.some((prefix) => normalized.startsWith(prefix))) {
+    return true;
+  }
+
+  const naturalLanguageMarkers = [
+    " in the ",
+    " in my ",
+    " from the ",
+    " from my ",
+    " with my ",
+    " has my ",
+    " for my ",
+  ];
+
+  return naturalLanguageMarkers.some((marker) => normalized.includes(marker));
 }
 
 export function getHelpText(): string {

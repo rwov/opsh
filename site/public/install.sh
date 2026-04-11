@@ -184,8 +184,11 @@ export PATH="$INSTALL_BIN_DIR:\$PATH"
 case \$- in
   *i*)
     if [ -z "\${OPSH_DISABLE_AUTO:-}" ] && [ -z "\${OPSH_ACTIVE_SHELL:-}" ] && [ -x "$INSTALL_BIN_DIR/opsh" ]; then
-      export OPSH_ACTIVE_SHELL=1
-      exec "$INSTALL_BIN_DIR/opsh"
+      OPSH_ACTIVE_SHELL=1 "$INSTALL_BIN_DIR/opsh"
+      opsh_status=\$?
+      if [ "\$opsh_status" -ne 0 ]; then
+        printf 'opsh failed to start (exit %s); continuing in %s.\n' "\$opsh_status" "\${SHELL##*/}" >&2
+      fi
     fi
     ;;
 esac
