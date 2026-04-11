@@ -3,7 +3,12 @@ import path from "node:path";
 import prompts from "prompts";
 import pc from "picocolors";
 import type { OpshConfig, ProviderType } from "./types.js";
-import { ensureDir, fileExists, readJsonFile, writeJsonFile } from "../utils/fs.js";
+import {
+  ensureDir,
+  fileExists,
+  readJsonFile,
+  writeJsonFile,
+} from "../utils/fs.js";
 
 const CONFIG_DIR = path.join(os.homedir(), ".opsh");
 const CONFIG_PATH = path.join(CONFIG_DIR, "config.json");
@@ -31,19 +36,14 @@ const MODEL_CATALOG: Record<
       hint: "OpenRouter picks a strong model automatically",
     },
     {
-      label: "Claude Sonnet 4.5",
-      value: "anthropic/claude-sonnet-4.5",
-      hint: "Strong default for coding and general use",
+      label: "Claude Haiku 4.5",
+      value: "anthropic/claude-haiku-4.5",
+      hint: "Strong default for small tasks, like opsh generation",
     },
     {
-      label: "Claude Opus 4.5",
-      value: "anthropic/claude-opus-4.5",
-      hint: "Highest-end Anthropic option",
-    },
-    {
-      label: "GPT-5.1",
-      value: "openai/gpt-5.1",
-      hint: "Latest flagship GPT-5 family model",
+      label: "GPT-5.4 Mini",
+      value: "openai/gpt-5.4-mini",
+      hint: "Latest flagship GPT-5 mini model",
     },
     {
       label: "Gemini 2.5 Flash",
@@ -53,29 +53,19 @@ const MODEL_CATALOG: Record<
   ],
   openai: [
     {
-      label: "GPT-5.1",
-      value: "gpt-5.1",
-      hint: "Latest flagship coding and agentic model",
+      label: "GPT-5.4 Mini",
+      value: "gpt-5.4-mini",
+      hint: "Latest flagship GPT-5 mini model",
     },
     {
       label: "GPT-5 mini",
       value: "gpt-5-mini",
-      hint: "Fast and cheaper GPT-5 family model",
+      hint: "Older, lower-cost GPT-5 mini model",
     },
     {
       label: "GPT-5 nano",
       value: "gpt-5-nano",
       hint: "Smallest low-cost GPT-5 family model",
-    },
-    {
-      label: "GPT-5.1 Codex mini",
-      value: "gpt-5.1-codex-mini",
-      hint: "Smaller coding-focused GPT-5.1 variant",
-    },
-    {
-      label: "GPT-5",
-      value: "gpt-5",
-      hint: "Previous flagship GPT-5 model",
     },
   ],
   anthropic: [
@@ -85,7 +75,7 @@ const MODEL_CATALOG: Record<
       hint: "Most capable Anthropic model",
     },
     {
-      label: "Claude Sonnet 4",
+      label: "Claude Haiku 4.5",
       value: "claude-sonnet-4-20250514",
       hint: "Balanced high-performance default",
     },
@@ -140,6 +130,8 @@ const MODEL_CATALOG: Record<
     },
   ],
 };
+
+const CUSTOM_MODEL_VALUE = "__custom_model__";
 
 export function getConfigPath(): string {
   return CONFIG_PATH;
@@ -196,7 +188,11 @@ export async function saveConfig(config: OpshConfig): Promise<void> {
   await writeJsonFile(CONFIG_PATH, config);
 }
 
-export async function loadConfig(): Promise<{ config: OpshConfig; created: boolean; path: string }> {
+export async function loadConfig(): Promise<{
+  config: OpshConfig;
+  created: boolean;
+  path: string;
+}> {
   await ensureDir(CONFIG_DIR);
 
   if (!(await fileExists(CONFIG_PATH))) {
@@ -209,21 +205,22 @@ export async function loadConfig(): Promise<{ config: OpshConfig; created: boole
   return { config: normalizeConfig(config), created: false, path: CONFIG_PATH };
 }
 
-export async function initConfigInteractively(existing?: OpshConfig): Promise<OpshConfig> {
+export async function initConfigInteractively(
+  existing?: OpshConfig,
+): Promise<OpshConfig> {
   const base = existing ?? createDefaultConfig();
 
-  const answers = await prompts(
-    buildOnboardingPrompts(base),
-    {
-      onCancel: () => {
-        throw new Error("Configuration bootstrap cancelled.");
-      },
+  const answers = await prompts(buildOnboardingPrompts(base), {
+    onCancel: () => {
+      throw new Error("Configuration bootstrap cancelled.");
     },
-  );
+  });
 
   const providerType = selectedProvider(answers, base);
   const warpMode = Boolean(answers.warpMode ?? base.warpMode);
-  const confirmByDefault = warpMode ? false : Boolean(answers.confirmByDefault ?? base.confirmByDefault);
+  const confirmByDefault = warpMode
+    ? false
+    : Boolean(answers.confirmByDefault ?? base.confirmByDefault);
   const next: OpshConfig = {
     version: 1,
     shell: undefined,
@@ -239,7 +236,7 @@ export async function initConfigInteractively(existing?: OpshConfig): Promise<Op
         providerType === "openrouter"
           ? {
               ...base.provider.openrouter,
-              model: String(answers.model ?? base.provider.openrouter.model),
+              model: resolveAnsweredModel(answers, base.provider.openrouter.model),
               baseUrl: defaultBaseUrlForProvider("openrouter"),
               apiKey: String(answers.apiKey ?? base.provider.openrouter.apiKey),
               temperature: base.provider.openrouter.temperature,
@@ -249,7 +246,7 @@ export async function initConfigInteractively(existing?: OpshConfig): Promise<Op
         providerType === "openai"
           ? {
               ...base.provider.openai,
-              model: String(answers.model ?? base.provider.openai.model),
+              model: resolveAnsweredModel(answers, base.provider.openai.model),
               baseUrl: defaultBaseUrlForProvider("openai"),
               apiKey: String(answers.apiKey ?? base.provider.openai.apiKey),
               temperature: base.provider.openai.temperature,
@@ -259,7 +256,7 @@ export async function initConfigInteractively(existing?: OpshConfig): Promise<Op
         providerType === "anthropic"
           ? {
               ...base.provider.anthropic,
-              model: String(answers.model ?? base.provider.anthropic.model),
+              model: resolveAnsweredModel(answers, base.provider.anthropic.model),
               baseUrl: defaultBaseUrlForProvider("anthropic"),
               apiKey: String(answers.apiKey ?? base.provider.anthropic.apiKey),
               temperature: base.provider.anthropic.temperature,
@@ -271,7 +268,7 @@ export async function initConfigInteractively(existing?: OpshConfig): Promise<Op
         providerType === "gemini"
           ? {
               ...base.provider.gemini,
-              model: String(answers.model ?? base.provider.gemini.model),
+              model: resolveAnsweredModel(answers, base.provider.gemini.model),
               baseUrl: defaultBaseUrlForProvider("gemini"),
               apiKey: String(answers.apiKey ?? base.provider.gemini.apiKey),
               temperature: base.provider.gemini.temperature,
@@ -281,7 +278,7 @@ export async function initConfigInteractively(existing?: OpshConfig): Promise<Op
         providerType === "ollama"
           ? {
               ...base.provider.ollama,
-              model: String(answers.model ?? base.provider.ollama.model),
+              model: resolveAnsweredModel(answers, base.provider.ollama.model),
               baseUrl: defaultBaseUrlForProvider("ollama"),
               temperature: base.provider.ollama.temperature,
             }
@@ -293,7 +290,9 @@ export async function initConfigInteractively(existing?: OpshConfig): Promise<Op
   return next;
 }
 
-export async function editConfigInteractively(existing: OpshConfig): Promise<OpshConfig> {
+export async function editConfigInteractively(
+  existing: OpshConfig,
+): Promise<OpshConfig> {
   let draft = normalizeConfig(existing);
 
   while (true) {
@@ -322,7 +321,8 @@ export async function editConfigInteractively(existing: OpshConfig): Promise<Ops
         {
           type: "confirm",
           name: "warpMode",
-          message: "Enable warp mode by default? Warp auto-runs safer commands and answers from the result.",
+          message:
+            "Enable warp mode by default? Warp auto-runs safer commands and answers from the result.",
           initial: draft.warpMode,
         },
         { onCancel: () => ({ warpMode: draft.warpMode }) },
@@ -330,7 +330,9 @@ export async function editConfigInteractively(existing: OpshConfig): Promise<Ops
       draft = {
         ...draft,
         warpMode: Boolean(answer.warpMode ?? draft.warpMode),
-        confirmByDefault: Boolean(answer.warpMode ?? draft.warpMode) ? false : draft.confirmByDefault,
+        confirmByDefault: Boolean(answer.warpMode ?? draft.warpMode)
+          ? false
+          : draft.confirmByDefault,
       };
       continue;
     }
@@ -347,7 +349,9 @@ export async function editConfigInteractively(existing: OpshConfig): Promise<Ops
       );
       draft = {
         ...draft,
-        confirmByDefault: draft.warpMode ? false : Boolean(answer.confirmByDefault ?? draft.confirmByDefault),
+        confirmByDefault: draft.warpMode
+          ? false
+          : Boolean(answer.confirmByDefault ?? draft.confirmByDefault),
       };
       continue;
     }
@@ -360,19 +364,14 @@ export async function editConfigInteractively(existing: OpshConfig): Promise<Ops
 
     if (action.action === "model") {
       const providerType = draft.provider.selected;
-      const answer = await prompts(
-        {
-          type: "select",
-          name: "model",
-          message: `Model for ${providerLabel(providerType)}`,
-          choices: buildModelChoices(providerType),
-          initial: modelChoiceIndex(providerType, getProviderDraft(draft, providerType).model),
-        },
-        { onCancel: () => ({ model: getProviderDraft(draft, providerType).model }) },
+      const answer = await promptModelSelection(
+        `Model for ${providerLabel(providerType)}`,
+        providerType,
+        getProviderDraft(draft, providerType).model,
       );
       draft = applyProviderAnswers(draft, {
         providerType,
-        model: answer.model ?? getProviderDraft(draft, providerType).model,
+        model: answer,
       });
       continue;
     }
@@ -390,7 +389,9 @@ export async function editConfigInteractively(existing: OpshConfig): Promise<Ops
           message: `API key for ${providerLabel(providerType)} (stored in ~/.opsh/config.json)`,
           initial: getProviderApiKey(draft, providerType),
         },
-        { onCancel: () => ({ apiKey: getProviderApiKey(draft, providerType) }) },
+        {
+          onCancel: () => ({ apiKey: getProviderApiKey(draft, providerType) }),
+        },
       );
       draft = applyProviderAnswers(draft, {
         providerType,
@@ -405,11 +406,16 @@ function normalizeConfig(config: OpshConfig): OpshConfig {
 
   return {
     version: 1,
-    shell: config.shell === "zsh" || config.shell === "bash" ? config.shell : defaults.shell,
+    shell:
+      config.shell === "zsh" || config.shell === "bash"
+        ? config.shell
+        : defaults.shell,
     printOnly: config.printOnly ?? defaults.printOnly,
     warpMode: config.warpMode ?? defaults.warpMode,
     confirmByDefault: config.confirmByDefault ?? defaults.confirmByDefault,
-    historyLimit: Number.isFinite(config.historyLimit) ? config.historyLimit : defaults.historyLimit,
+    historyLimit: Number.isFinite(config.historyLimit)
+      ? config.historyLimit
+      : defaults.historyLimit,
     recentContextLimit: Number.isFinite(config.recentContextLimit)
       ? config.recentContextLimit
       : defaults.recentContextLimit,
@@ -417,14 +423,21 @@ function normalizeConfig(config: OpshConfig): OpshConfig {
   };
 }
 
-function normalizeProviders(config: OpshConfig["provider"] | undefined, defaults: OpshConfig["provider"]): OpshConfig["provider"] {
+function normalizeProviders(
+  config: OpshConfig["provider"] | undefined,
+  defaults: OpshConfig["provider"],
+): OpshConfig["provider"] {
   return {
-    selected: isProviderType(config?.selected) ? config.selected : defaults.selected,
+    selected: isProviderType(config?.selected)
+      ? config.selected
+      : defaults.selected,
     openrouter: {
       model: config?.openrouter?.model ?? defaults.openrouter.model,
-      baseUrl: config?.openrouter?.baseUrl ?? defaultBaseUrlForProvider("openrouter"),
+      baseUrl:
+        config?.openrouter?.baseUrl ?? defaultBaseUrlForProvider("openrouter"),
       apiKey: config?.openrouter?.apiKey ?? defaults.openrouter.apiKey,
-      temperature: config?.openrouter?.temperature ?? defaults.openrouter.temperature,
+      temperature:
+        config?.openrouter?.temperature ?? defaults.openrouter.temperature,
     },
     openai: {
       model: config?.openai?.model ?? defaults.openai.model,
@@ -434,10 +447,13 @@ function normalizeProviders(config: OpshConfig["provider"] | undefined, defaults
     },
     anthropic: {
       model: config?.anthropic?.model ?? defaults.anthropic.model,
-      baseUrl: config?.anthropic?.baseUrl ?? defaultBaseUrlForProvider("anthropic"),
+      baseUrl:
+        config?.anthropic?.baseUrl ?? defaultBaseUrlForProvider("anthropic"),
       apiKey: config?.anthropic?.apiKey ?? defaults.anthropic.apiKey,
-      temperature: config?.anthropic?.temperature ?? defaults.anthropic.temperature,
-      apiVersion: config?.anthropic?.apiVersion ?? defaults.anthropic.apiVersion,
+      temperature:
+        config?.anthropic?.temperature ?? defaults.anthropic.temperature,
+      apiVersion:
+        config?.anthropic?.apiVersion ?? defaults.anthropic.apiVersion,
       maxTokens: config?.anthropic?.maxTokens ?? defaults.anthropic.maxTokens,
     },
     gemini: {
@@ -459,11 +475,13 @@ function buildOnboardingPrompts(base: OpshConfig) {
     {
       type: "confirm" as const,
       name: "warpMode",
-      message: "Enable warp mode by default? Warp auto-runs safer commands and answers from the result.",
+      message:
+        "Enable warp mode by default? Warp auto-runs safer commands and answers from the result.",
       initial: base.warpMode,
     },
     {
-      type: (_prev: unknown, values: Record<string, unknown>) => (Boolean(values.warpMode ?? base.warpMode) ? null : "confirm"),
+      type: (_prev: unknown, values: Record<string, unknown>) =>
+        Boolean(values.warpMode ?? base.warpMode) ? null : "confirm",
       name: "confirmByDefault",
       message: "Require confirmation before execution?",
       initial: base.confirmByDefault,
@@ -477,14 +495,31 @@ function buildOnboardingPrompts(base: OpshConfig) {
     },
     {
       type: "select" as const,
-      name: "model",
-      message: "Model",
-      choices: (_prev: unknown, values: Record<string, unknown>) => buildModelChoices(selectedProvider(values, base)),
+      name: "modelPreset",
+      message: "Model preset",
+      choices: (_prev: unknown, values: Record<string, unknown>) =>
+        buildModelChoices(selectedProvider(values, base)),
       initial: (_prev: unknown, values: Record<string, unknown>) =>
-        modelChoiceIndex(selectedProvider(values, base), getProviderDraft(base, selectedProvider(values, base)).model),
+        modelChoiceIndex(
+          selectedProvider(values, base),
+          getProviderDraft(base, selectedProvider(values, base)).model,
+        ),
     },
     {
-      type: (_prev: unknown, values: Record<string, unknown>) => (selectedProvider(values, base) === "ollama" ? null : "password"),
+      type: (_prev: unknown, values: Record<string, unknown>) =>
+        values.modelPreset === CUSTOM_MODEL_VALUE ? "text" : null,
+      name: "customModel",
+      message: "Custom model ID",
+      initial: (_prev: unknown, values: Record<string, unknown>) => {
+        const providerType = selectedProvider(values, base);
+        return getProviderDraft(base, providerType).model;
+      },
+      validate: (value: string) =>
+        value.trim().length > 0 ? true : "Enter a model ID.",
+    },
+    {
+      type: (_prev: unknown, values: Record<string, unknown>) =>
+        selectedProvider(values, base) === "ollama" ? null : "password",
       name: "apiKey",
       message: "API key (stored in ~/.opsh/config.json)",
       initial: (_prev: unknown, values: Record<string, unknown>) => {
@@ -498,30 +533,37 @@ function buildOnboardingPrompts(base: OpshConfig) {
   ];
 }
 
-function buildConfigEditorChoices(config: OpshConfig): Array<{ title: string; description: string; value: string }> {
+function buildConfigEditorChoices(
+  config: OpshConfig,
+): Array<{ title: string; description: string; value: string }> {
   const providerType = config.provider.selected;
-  const choices: Array<{ title: string; description: string; value: string }> = [
-    {
-      title: "Warp mode",
-      description: config.warpMode ? "On" : "Off",
-      value: "warp",
-    },
-    {
-      title: "Confirmation",
-      description: config.warpMode ? "Managed by warp mode" : config.confirmByDefault ? "On" : "Off",
-      value: "confirm",
-    },
-    {
-      title: "Provider",
-      description: providerLabel(providerType),
-      value: "provider",
-    },
-    {
-      title: "Model",
-      description: getProviderDraft(config, providerType).model,
-      value: "model",
-    },
-  ];
+  const choices: Array<{ title: string; description: string; value: string }> =
+    [
+      {
+        title: "Warp mode",
+        description: config.warpMode ? "On" : "Off",
+        value: "warp",
+      },
+      {
+        title: "Confirmation",
+        description: config.warpMode
+          ? "Managed by warp mode"
+          : config.confirmByDefault
+            ? "On"
+            : "Off",
+        value: "confirm",
+      },
+      {
+        title: "Provider",
+        description: providerLabel(providerType),
+        value: "provider",
+      },
+      {
+        title: "Model",
+        description: getProviderDraft(config, providerType).model,
+        value: "model",
+      },
+    ];
 
   if (providerType !== "ollama") {
     choices.push({
@@ -540,7 +582,10 @@ function buildConfigEditorChoices(config: OpshConfig): Array<{ title: string; de
   return choices;
 }
 
-function selectedProvider(values: Record<string, unknown>, base: OpshConfig): ProviderType {
+function selectedProvider(
+  values: Record<string, unknown>,
+  base: OpshConfig,
+): ProviderType {
   const value = values.providerType;
   return isProviderType(value) ? value : base.provider.selected;
 }
@@ -561,7 +606,13 @@ function providerChoiceIndex(providerType: ProviderType): number {
 }
 
 function isProviderType(value: unknown): value is ProviderType {
-  return value === "openrouter" || value === "openai" || value === "anthropic" || value === "gemini" || value === "ollama";
+  return (
+    value === "openrouter" ||
+    value === "openai" ||
+    value === "anthropic" ||
+    value === "gemini" ||
+    value === "ollama"
+  );
 }
 
 function getProviderDraft(config: OpshConfig, providerType: ProviderType) {
@@ -579,7 +630,10 @@ function getProviderDraft(config: OpshConfig, providerType: ProviderType) {
   }
 }
 
-function getProviderApiKey(config: OpshConfig, providerType: Exclude<ProviderType, "ollama">): string {
+function getProviderApiKey(
+  config: OpshConfig,
+  providerType: Exclude<ProviderType, "ollama">,
+): string {
   switch (providerType) {
     case "openrouter":
       return config.provider.openrouter.apiKey;
@@ -607,20 +661,33 @@ function defaultBaseUrlForProvider(providerType: ProviderType): string {
   }
 }
 
-function buildModelChoices(providerType: ProviderType): Array<{ title: string; description: string; value: string }> {
-  return MODEL_CATALOG[providerType].map((model) => ({
-    title: `${model.label} ${pc.bold(model.value)}`,
-    description: model.hint,
-    value: model.value,
-  }));
+function buildModelChoices(
+  providerType: ProviderType,
+): Array<{ title: string; description: string; value: string }> {
+  return [
+    ...MODEL_CATALOG[providerType].map((model) => ({
+      title: `${model.label} ${pc.bold(model.value)}`,
+      description: model.hint,
+      value: model.value,
+    })),
+    {
+      title: "Custom model ID",
+      description: "Enter any provider-specific model identifier",
+      value: CUSTOM_MODEL_VALUE,
+    },
+  ];
 }
 
 function modelChoiceIndex(providerType: ProviderType, modelId: string): number {
-  const index = MODEL_CATALOG[providerType].findIndex((model) => model.value === modelId);
-  return index >= 0 ? index : 0;
+  const index = MODEL_CATALOG[providerType].findIndex(
+    (model) => model.value === modelId,
+  );
+  return index >= 0 ? index : MODEL_CATALOG[providerType].length;
 }
 
-async function promptProviderSelection(base: OpshConfig): Promise<{ providerType: ProviderType; model: string; apiKey?: string }> {
+async function promptProviderSelection(
+  base: OpshConfig,
+): Promise<{ providerType: ProviderType; model: string; apiKey?: string }> {
   const answers = await prompts(
     [
       {
@@ -632,19 +699,38 @@ async function promptProviderSelection(base: OpshConfig): Promise<{ providerType
       },
       {
         type: "select",
-        name: "model",
-        message: "Model",
-        choices: (_prev: unknown, values: Record<string, unknown>) => buildModelChoices(selectedProvider(values, base)),
+        name: "modelPreset",
+        message: "Model preset",
+        choices: (_prev: unknown, values: Record<string, unknown>) =>
+          buildModelChoices(selectedProvider(values, base)),
         initial: (_prev: unknown, values: Record<string, unknown>) =>
-          modelChoiceIndex(selectedProvider(values, base), getProviderDraft(base, selectedProvider(values, base)).model),
+          modelChoiceIndex(
+            selectedProvider(values, base),
+            getProviderDraft(base, selectedProvider(values, base)).model,
+          ),
       },
       {
-        type: (_prev: unknown, values: Record<string, unknown>) => (selectedProvider(values, base) === "ollama" ? null : "password"),
+        type: (_prev: unknown, values: Record<string, unknown>) =>
+          values.modelPreset === CUSTOM_MODEL_VALUE ? "text" : null,
+        name: "customModel",
+        message: "Custom model ID",
+        initial: (_prev: unknown, values: Record<string, unknown>) => {
+          const providerType = selectedProvider(values, base);
+          return getProviderDraft(base, providerType).model;
+        },
+        validate: (value: string) =>
+          value.trim().length > 0 ? true : "Enter a model ID.",
+      },
+      {
+        type: (_prev: unknown, values: Record<string, unknown>) =>
+          selectedProvider(values, base) === "ollama" ? null : "password",
         name: "apiKey",
         message: "API key (stored in ~/.opsh/config.json)",
         initial: (_prev: unknown, values: Record<string, unknown>) => {
           const providerType = selectedProvider(values, base);
-          return providerType === "ollama" ? "" : getProviderApiKey(base, providerType);
+          return providerType === "ollama"
+            ? ""
+            : getProviderApiKey(base, providerType);
         },
       },
     ],
@@ -659,8 +745,14 @@ async function promptProviderSelection(base: OpshConfig): Promise<{ providerType
 
   return {
     providerType,
-    model: String(answers.model ?? getProviderDraft(base, providerType).model),
-    apiKey: providerType === "ollama" ? undefined : String(answers.apiKey ?? getProviderApiKey(base, providerType)),
+    model: resolveAnsweredModel(
+      answers,
+      getProviderDraft(base, providerType).model,
+    ),
+    apiKey:
+      providerType === "ollama"
+        ? undefined
+        : String(answers.apiKey ?? getProviderApiKey(base, providerType)),
   };
 }
 
@@ -728,8 +820,61 @@ function applyProviderAnswers(
   };
 }
 
+async function promptModelSelection(
+  message: string,
+  providerType: ProviderType,
+  currentModel: string,
+): Promise<string> {
+  const answers = await prompts(
+    [
+      {
+        type: "select",
+        name: "modelPreset",
+        message,
+        choices: buildModelChoices(providerType),
+        initial: modelChoiceIndex(providerType, currentModel),
+      },
+      {
+        type: (_prev: unknown, values: Record<string, unknown>) =>
+          values.modelPreset === CUSTOM_MODEL_VALUE ? "text" : null,
+        name: "customModel",
+        message: "Custom model ID",
+        initial: currentModel,
+        validate: (value: string) =>
+          value.trim().length > 0 ? true : "Enter a model ID.",
+      },
+    ],
+    {
+      onCancel: () => ({
+        modelPreset: currentModel,
+        customModel: currentModel,
+      }),
+    },
+  );
+
+  return resolveAnsweredModel(answers, currentModel);
+}
+
+function resolveAnsweredModel(
+  answers: Record<string, unknown>,
+  fallback: string,
+): string {
+  const preset =
+    typeof answers.modelPreset === "string" ? answers.modelPreset : undefined;
+  if (preset === CUSTOM_MODEL_VALUE) {
+    const custom =
+      typeof answers.customModel === "string" ? answers.customModel.trim() : "";
+    return custom || fallback;
+  }
+
+  return preset ?? fallback;
+}
+
 function providerLabel(providerType: ProviderType): string {
-  return PROVIDER_CHOICES.find((choice) => choice.value === providerType)?.title ?? providerType;
+  return (
+    PROVIDER_CHOICES.find((choice) => choice.value === providerType)?.title ??
+    providerType
+  );
 }
 
 function maskSecret(value: string): string {

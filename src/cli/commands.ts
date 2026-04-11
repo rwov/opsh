@@ -5,6 +5,7 @@ import type { HistoryStore } from "../shell/history.js";
 
 export type ReplMetaCommand =
   | { type: "help" }
+  | { type: "status" }
   | { type: "config" }
   | { type: "history" }
   | { type: "clear" }
@@ -18,6 +19,7 @@ export function parseMetaCommand(input: string): ReplMetaCommand | null {
   const trimmed = input.trim();
 
   if (trimmed === "!help") return { type: "help" };
+  if (trimmed === "!status") return { type: "status" };
   if (trimmed === "!config") return { type: "config" };
   if (trimmed === "!history") return { type: "history" };
   if (trimmed === "!clear") return { type: "clear" };
@@ -47,6 +49,7 @@ export function buildDirectPlan(input: string) {
 export function getHelpText(): string {
   const commands = [
     ["!help", "Show this help"],
+    ["!status", "Show current runtime mode status"],
     ["!config", "Show config path and provider summary"],
     ["!history", "Show recent bounded history"],
     ["!clear", "Clear the terminal"],
@@ -64,6 +67,32 @@ export function getHelpText(): string {
     ...commands.map(([command, description]) => {
       return `${pc.cyan(command.padEnd(width, " "))} - ${description}`;
     }),
+  ].join("\n");
+}
+
+export function formatRuntimeStatus(input: {
+  config: OpshConfig;
+  directMode: boolean;
+  warpMode: boolean;
+  printOnly: boolean;
+  cwd: string;
+}): string {
+  const provider = input.config.provider[input.config.provider.selected];
+  const rows = [
+    ["Path", shortenPath(input.cwd)],
+    ["Shell", input.config.shell ?? "auto-detect"],
+    ["Warp", input.warpMode ? "On" : "Off"],
+    ["Cmd", input.directMode ? "On" : "Off"],
+    ["Print", input.printOnly ? "On" : "Off"],
+    ["Confirm", input.warpMode ? "Managed by warp mode" : input.config.confirmByDefault ? "On" : "Off"],
+    ["Provider", input.config.provider.selected],
+    ["Model", provider.model],
+  ] as const;
+  const width = Math.max(...rows.map(([label]) => label.length));
+
+  return [
+    "Status:",
+    ...rows.map(([label, value]) => `${pc.cyan(label.padEnd(width, " "))} - ${value}`),
   ].join("\n");
 }
 

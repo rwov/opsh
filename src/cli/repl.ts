@@ -2,7 +2,7 @@ import { createInterface } from "node:readline/promises";
 import os from "node:os";
 import path from "node:path";
 import pc from "picocolors";
-import { formatConfigSummary, formatHistory, getHelpText, parseMetaCommand } from "./commands.js";
+import { formatConfigSummary, formatHistory, formatRuntimeStatus, getHelpText, parseMetaCommand } from "./commands.js";
 import { handOffToShell, runInstalledUninstaller } from "./uninstall.js";
 import type { OpshConfig } from "../config/types.js";
 import { editConfigInteractively, saveConfig } from "../config/load.js";
@@ -74,6 +74,16 @@ export async function runRepl(input: {
         }
         if (meta.type === "help") {
           process.stdout.write(`${getHelpText()}\n`);
+          continue;
+        }
+        if (meta.type === "status") {
+          process.stdout.write(`${formatRuntimeStatus({
+            config: input.config,
+            directMode,
+            warpMode,
+            printOnly,
+            cwd: input.shellSession.cwd,
+          })}\n`);
           continue;
         }
         if (meta.type === "config") {
