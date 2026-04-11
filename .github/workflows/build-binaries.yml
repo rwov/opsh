@@ -34,23 +34,17 @@ jobs:
         id: release
         env:
           GH_TOKEN: ${{ github.token }}
-          BEFORE_SHA: ${{ github.event.before }}
         run: |
           current_version="$(bun -e 'import pkg from "./package.json"; console.log(pkg.version)')"
           current_tag="v${current_version}"
 
-          previous_version=""
-          if [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
-            previous_package_json="$(git show "${BEFORE_SHA}:package.json" 2>/dev/null || true)"
-            if [ -n "$previous_package_json" ]; then
-              previous_version="$(printf '%s' "$previous_package_json" | bun -e 'const input = await new Response(Bun.stdin.stream()).text(); console.log(JSON.parse(input).version ?? "")')"
-            fi
-          fi
+          latest_release_tag="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq '.tag_name' 2>/dev/null || true)"
+          latest_release_version="${latest_release_tag#v}"
 
           echo "version=${current_version}" >>"$GITHUB_OUTPUT"
           echo "tag=${current_tag}" >>"$GITHUB_OUTPUT"
 
-          if [ -z "$current_version" ] || [ "$current_version" = "$previous_version" ]; then
+          if [ -z "$current_version" ] || [ "$current_version" = "$latest_release_version" ]; then
             echo "released=false" >>"$GITHUB_OUTPUT"
             exit 0
           fi
