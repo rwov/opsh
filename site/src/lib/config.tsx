@@ -78,7 +78,7 @@ export const siteConfig = {
       { id: 1, name: "Features", href: "/" },
       { id: 1, name: "Install", href: "/install" },
       //   { id: 3, name: "Pricing", href: "#" },
-      { id: 2, name: "Docs", href: "#" },
+      { id: 2, name: "Docs", href: "https://docs.opsh.dxu.one" },
       //   { id: 5, name: "Company", href: "#" },
     ],
   },
