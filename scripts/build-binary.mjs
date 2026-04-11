@@ -197,9 +197,7 @@ function stripBinaryIfPossible(binaryPath) {
   const candidates =
     process.platform === "darwin"
       ? [["strip", ["-x", binaryPath]]]
-      : process.platform === "linux"
-        ? [["strip", ["--strip-unneeded", binaryPath]]]
-        : [];
+      : [];
 
   for (const [command, args] of candidates) {
     try {
