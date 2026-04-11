@@ -1,9 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/config";
 import { SectionHeader } from "../section-header";
-import { Icons } from "../icons";
 import { HeaderBadge } from "../header-badge";
 import { LazyDither } from "@/components/animations/lazy-dither";
 import { TerminalWindow } from "@/components/animations/sections/terminal-browser-preview";
@@ -54,7 +52,7 @@ export function FeatureSection() {
           <div className="col-span-1 md:col-span-4 w-full border-t md:border-t-0 md:border-l border-border relative">
             <div className="w-full divide-y divide-border">
               <div className="relative">
-                <div className="relative min-h-[300px] md:min-h-[400px] flex items-center justify-center p-6 md:p-10 bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.12),_transparent_55%)]">
+                <div className="relative min-h-[300px] md:min-h-[400px] flex items-center justify-center p-6 md:p-10 [background-image:var(--feature-surface-strong)]">
                   <TerminalWindow
                     opsh
                     command="find every log file changed today larger than 50MB"
@@ -80,7 +78,7 @@ export function FeatureSection() {
               </div>
 
               <div className="relative">
-                <div className="relative min-h-[300px] md:min-h-[400px] flex items-center justify-center p-6 md:p-10 bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.10),_transparent_55%)]">
+                <div className="relative min-h-[300px] md:min-h-[400px] flex items-center justify-center p-6 md:p-10 [background-image:var(--feature-surface-soft)]">
                   <TerminalWindow
                     opsh
                     command="which branch changed the auth middleware most recently?"

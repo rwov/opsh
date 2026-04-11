@@ -152,7 +152,7 @@ function ConnectorSVG({
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.6, ease: "easeInOut" }}
         d="M16 7.99999L64 8C72.8366 8 80 15.1634 80 24L80 82"
-        stroke="#00A6F4"
+        stroke="var(--primary)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -165,7 +165,7 @@ function ConnectorSVG({
         fillRule="evenodd"
         clipRule="evenodd"
         d="M88.7046 80.293C89.0951 80.6835 89.0951 81.3165 88.7046 81.707L81.4116 89C80.6306 89.7808 79.3645 89.7809 78.5835 89L71.2905 81.707C70.9001 81.3166 70.9002 80.6835 71.2905 80.293C71.681 79.9025 72.3141 79.9025 72.7046 80.293L78.9741 86.5625L78.9741 81.9609C78.9741 81.4087 79.4218 80.9609 79.9741 80.9609C80.5264 80.9609 80.9741 81.4087 80.9741 81.9609L80.9741 86.6094L87.2905 80.293C87.681 79.9025 88.3141 79.9025 88.7046 80.293Z"
-        fill="#00A6F4"
+        fill="var(--primary)"
       />
       <motion.path
         initial={{ scale: 0 }}
@@ -175,7 +175,7 @@ function ConnectorSVG({
         clipRule="evenodd"
         d="M16 2C12.6863 2 10 4.68629 10 8C10 11.3137 12.6863 14 16 14C19.3137 14 22 11.3137 22 8C22 4.68629 19.3137 2 16 2Z"
         fill="white"
-        stroke="#00A6F4"
+        stroke="var(--primary)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"

@@ -29,7 +29,7 @@ export function WorkflowConnectSection() {
     >
       <div className="relative h-14 overflow-hidden">
         <div className="absolute inset-0">
-          <LazyDither enableMouseInteraction={false} />
+          <LazyDither enableMouseInteraction={true} />
         </div>
       </div>
 

@@ -144,7 +144,7 @@ export const Feature = ({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={MEDIA_TRANSITION}
-          className="min-h-[400px] w-full rounded-xl border border-border bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.14),_transparent_50%),linear-gradient(to_bottom_right,_hsl(var(--muted)),_hsl(var(--background)))] p-6 md:p-8 lg:p-10"
+          className="min-h-[400px] w-full rounded-xl border border-border [background-image:var(--feature-surface)] p-6 md:p-8 lg:p-10"
         >
           <div className="mx-auto flex h-full min-h-[350px] w-full max-w-5xl items-center justify-center">
             <div className="h-[78%] w-full flex items-center justify-center">
@@ -213,7 +213,7 @@ export const Feature = ({
                 <motion.span
                   key={`${currentIndex}-${trigger}`}
                   className={cn(
-                    "absolute inset-0 -top-px",
+                    "absolute inset-0 atop-px",
                     isVertical ? "origin-top" : "origin-left",
                     lineColor,
                     isVertical ? "w-px h-full" : "h-px w-full",

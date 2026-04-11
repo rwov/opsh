@@ -10,8 +10,8 @@ export function CTASection() {
             id={ctaSection.id}
             className="relative flex flex-col items-center justify-center px-4 py-20 md:py-32 overflow-hidden"
         >
-            <div className="absolute inset-0 -z-1 h-full w-full bg-radial-[at_45%_85%] from-[#2CD5FF]/40 via-[#2C30FF]/4 mask-[linear-gradient(to_bottom,transparent,black_100%)]" />
-            <div className="absolute inset-0 -z-1 h-full w-full bg-radial-[at_45%_68%] from-[#2CD5FF]/68 via-[#2C30FF]/3 mask-[linear-gradient(to_bottom,transparent,black_100%)] blur-[50px]" />
+            <div className="absolute inset-0 -z-1 h-full w-full bg-radial-[at_45%_85%] from-[var(--hero-glow-primary)] via-[var(--hero-glow-secondary)] mask-[linear-gradient(to_bottom,transparent,black_100%)]" />
+            <div className="absolute inset-0 -z-1 h-full w-full bg-radial-[at_45%_68%] from-[var(--hero-glow-primary-strong)] via-[var(--hero-glow-secondary-strong)] mask-[linear-gradient(to_bottom,transparent,black_100%)] blur-[50px]" />
 
             {/* Content */}
             <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-6 max-w-4xl mx-auto">
@@ -30,8 +30,8 @@ export function CTASection() {
                         size="lg"
                         className={cn(
                             "rounded-full px-8 py-6 text-base font-medium text-primary-foreground",
-                            "bg-linear-to-b from-sky-500 to-sky-600",
-                            "shadow-[0px_1px_2px_0px_#00000016,0px_2px_4px_0px_#00000006,inset_0px_0px_1.5px_#0084D1,inset_0px_2.5px_0px_#ffffff16,inset_0px_0px_2.5px_#ffffff08] ring-2 ring-sky-600 hover:from-sky-600 hover:to-sky-700",
+                            "bg-linear-to-b from-[var(--gradient-primary)] to-[var(--gradient-secondary)]",
+                            "shadow-[var(--button-shadow)] ring-2 ring-primary/70 hover:brightness-105",
                         )}
                     >
                         <a href={ctaSection.button.href}>

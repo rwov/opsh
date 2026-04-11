@@ -287,7 +287,7 @@ function DitheredWaves({
     const dpr = gl.getPixelRatio();
     mouseRef.current.set(
       (e.clientX - rect.left) * dpr,
-      (e.clientY - rect.top) * dpr
+      (e.clientY - rect.top) * dpr,
     );
   };
 
@@ -343,7 +343,7 @@ export function Dither({
   pixelSize = 2,
   disableAnimation = false,
   enableMouseInteraction = false,
-  mouseRadius = 1,
+  mouseRadius = 2,
 }: DitherProps) {
   const { resolvedTheme } = useTheme();
   const activeColor = resolvedTheme === "dark" ? waveColorDark : waveColor;
@@ -376,4 +376,3 @@ export function Dither({
     </Canvas>
   );
 }
-

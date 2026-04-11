@@ -23,8 +23,8 @@ export function ConnectionStatusIndicator({ status }: { status: ConnectionStatus
                         size="sm"
                         className={cn(
                             "flex items-center gap-2 rounded-full pl-2 pr-3 py-2 text-sm font-medium text-primary-foreground w-fit",
-                            "bg-linear-to-b from-gradient-primary to-sky-600",
-                            "shadow-[0px_1px_2px_0px_#00000016,0px_2px_4px_0px_#00000006,inset_0px_0px_1.5px_#0084D1,inset_0px_2.5px_0px_#ffffff16,inset_0px_0px_2.5px_#ffffff08] ring-2 ring-sky-600 hover:from-sky-600 hover:to-sky-700"
+                            "bg-linear-to-b from-[var(--gradient-primary)] to-[var(--gradient-secondary)]",
+                            "shadow-[var(--button-shadow)] ring-2 ring-primary/70 hover:brightness-105"
                         )}
                     >
                         <div className="size-4 flex items-center justify-center shrink-0">
@@ -45,4 +45,3 @@ export function ConnectionStatusIndicator({ status }: { status: ConnectionStatus
         </AnimatePresence>
     );
 }
-

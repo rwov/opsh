@@ -24,7 +24,7 @@ export function IntegrationsPopover({ open, position = "bottom" }: { open: boole
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: position === "top" ? 10 : -10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className={`absolute ${positionClasses} left-1/2 -translate-x-1/2 md:left-4 md:translate-x-0 overflow-hidden rounded-3xl w-[280px] md:w-[350px] bg-linear-to-b from-[#E5E7EB] dark:from-[#27272A] to-[#E5E7EB]/40 dark:to-[#27272A]/40 text-secondary-foreground text-sm font-medium backdrop-blur-xl backdrop-saturate-150 shadow-badge z-50`}
+                    className={`absolute ${positionClasses} left-1/2 -translate-x-1/2 md:left-4 md:translate-x-0 overflow-hidden rounded-3xl w-[280px] md:w-[350px] [background-image:var(--glass-surface)] text-secondary-foreground text-sm font-medium backdrop-blur-xl backdrop-saturate-150 shadow-badge z-50`}
                 >
                     <div className="flex flex-col divide-y divide-black/5 dark:divide-white/10">
                         <div className="relative">
@@ -66,4 +66,3 @@ export function IntegrationsPopover({ open, position = "bottom" }: { open: boole
         </AnimatePresence>
     );
 }
-

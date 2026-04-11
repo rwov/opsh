@@ -8,7 +8,7 @@ import type { DitherProps } from "@/components/animations/dither";
 
 const DynamicDither = dynamic(
   () => import("@/components/animations/dither").then((m) => m.Dither),
-  { ssr: false }
+  { ssr: false },
 );
 
 export type LazyDitherProps = DitherProps & {
@@ -38,7 +38,7 @@ export function LazyDither({
         setShouldMount(true);
         io.disconnect();
       },
-      { root: null, rootMargin, threshold: 0.01 }
+      { root: null, rootMargin, threshold: 0.01 },
     );
 
     io.observe(el);
@@ -57,7 +57,7 @@ export function LazyDither({
         aria-hidden="true"
         className={cn(
           "absolute inset-0 bg-linear-to-r from-muted/10 via-muted/25 to-muted/10",
-          placeholderClassName
+          placeholderClassName,
         )}
       />
 
@@ -65,7 +65,7 @@ export function LazyDither({
         <div
           className={cn(
             "absolute inset-0 transition-opacity duration-500",
-            visible ? "opacity-100" : "opacity-0"
+            visible ? "opacity-100" : "opacity-0",
           )}
         >
           <DynamicDither {...props} />
@@ -74,4 +74,3 @@ export function LazyDither({
     </div>
   );
 }
-
